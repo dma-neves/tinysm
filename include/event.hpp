@@ -9,7 +9,7 @@ template <typename State>
 class tsm;
 
 template <typename State>
-class event_cluster;
+class event_group;
 
 template <typename State>
 class event {
@@ -17,7 +17,7 @@ class event {
 public:
 
     friend class tsm<State>;
-    friend class event_cluster<State>;
+    friend class event_group<State>;
 
     void trigger() {
 

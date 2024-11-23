@@ -72,9 +72,9 @@ int main() {
     event<ElevatorState> select_floor_below_elevator_floor_;
     event<ElevatorState> reached_selected_floor_;
 
-    event_cluster<ElevatorState> open_door({&press_up_at_elevator_floor_, &press_down_at_elevator_floor_, &press_open_door_});
-    event_cluster<ElevatorState> go_down({&select_floor_below_elevator_floor_, &press_up_below_elevator_floor_, &press_down_below_elevator_floor_});
-    event_cluster<ElevatorState> go_up({&select_floor_above_elevator_floor_, &press_up_above_elevator_floor_, &press_down_above_elevator_floor_});
+    event_group<ElevatorState> open_door({&press_up_at_elevator_floor_, &press_down_at_elevator_floor_, &press_open_door_});
+    event_group<ElevatorState> go_down({&select_floor_below_elevator_floor_, &press_up_below_elevator_floor_, &press_down_below_elevator_floor_});
+    event_group<ElevatorState> go_up({&select_floor_above_elevator_floor_, &press_up_above_elevator_floor_, &press_down_above_elevator_floor_});
 
     tsm<ElevatorState> elevator_sm(ElevatorState::DoorClosed, {
 

@@ -5,7 +5,7 @@
 #include <tuple>
 
 #include "event.hpp"
-#include "event_cluster.hpp"
+#include "event_group.hpp"
 
 template <typename State>
 class tsm {

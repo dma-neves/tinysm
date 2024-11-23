@@ -1,12 +1,12 @@
-#ifndef EVENT_CLUSTER
-#define EVENT_CLUSTER
+#ifndef EVENT_GROUP
+#define EVENT_GROUP
 
 #include "event.hpp"
 
 #include <vector>
 
 template <typename State>
-class event_cluster : public event<State> {
+class event_group : public event<State> {
 
 public:
 
@@ -14,7 +14,7 @@ public:
         event<State>::trigger();
     }
 
-    event_cluster(std::vector<event<State>*>&& transitions) {
+    event_group(std::vector<event<State>*>&& transitions) {
 
         transitions_ = std::move(transitions);
 

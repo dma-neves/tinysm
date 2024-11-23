@@ -22,45 +22,8 @@ tinysm is composed of four concepts:
 
 - The `State` type, which can be a primitive data type, an enum, etc. See examples below.
 - The `event`, which describes an event that can trigger a transition between states. We can define such events using a class that inherits from `event`. In this class we can implement any logic we desire, and whenever we want to trigger a transition, we call the `trigger` method from the parent class. If no specific logic is required, we simply instantiate an `event` object, and call `trigger` whenever necessary.
-- The `event_cluster`. If multiple events should trigger the same state transition, we cluster them using an `event_cluster`. The `event_cluster` receives a vector of `event` addresses.
-- The `tsm`, which allows us to declaratively define the relation between state transitions and events or event clusters. The `tsm` constructor receives a default state, and a map whose keys are tuples `<start_state, end_state>`, and values are `event`s or `event_cluster`s. If needed, we can also dynamically add and remove transitions.
-
-## LED example:
-
-```c++
-#include "tinysm.hpp"
-
-class turn_on_switch : public event<bool> {
-public:
-    void press() { trigger(); }
-};
-
-class turn_off_switch : public event<bool> {
-public:
-    void press() { trigger(); }
-};
-
-int main() {
-
-    turn_on_switch ton;
-    turn_off_switch toff;
-
-    tsm<bool> led_sm({false, // default state
-        {
-            {{false, true}, ton},
-            {{true, false}, toff}
-        }
-    });
-
-    print_led_state(led_sm.get_state());; // false
-    toff.press();
-    print_led_state(led_sm.get_state()); // false
-    ton.press();
-    print_led_state(led_sm.get_state()); // true
-    toff.press();
-    print_led_state(led_sm.get_state()); // false
-}
-```
+- The `event_group`. If multiple events should trigger the same state transition, we group them using an `event_group`. The `event_group` receives a vector of `event` addresses.
+- The `tsm`, which allows us to declaratively define the relation between state transitions and events or event groups. The `tsm` constructor receives a default state, and a map whose keys are tuples `<start_state, end_state>`, and values are `event`s or `event_group`s. If needed, we can also dynamically add and remove transitions.
 
 ## Elevator Example
 
@@ -121,9 +84,9 @@ int main() {
         select_floor_below_elevator_floor_,
         reached_selected_floor_;
 
-    event_cluster<ElevatorState> open_door({&press_up_at_elevator_floor_, &press_down_at_elevator_floor_, &press_open_door_});
-    event_cluster<ElevatorState> go_down({&select_floor_below_elevator_floor_, &press_up_below_elevator_floor_, &press_down_below_elevator_floor_});
-    event_cluster<ElevatorState> go_up({&select_floor_above_elevator_floor_, &press_up_above_elevator_floor_, &press_down_above_elevator_floor_});
+    event_group<ElevatorState> open_door({&press_up_at_elevator_floor_, &press_down_at_elevator_floor_, &press_open_door_});
+    event_group<ElevatorState> go_down({&select_floor_below_elevator_floor_, &press_up_below_elevator_floor_, &press_down_below_elevator_floor_});
+    event_group<ElevatorState> go_up({&select_floor_above_elevator_floor_, &press_up_above_elevator_floor_, &press_down_above_elevator_floor_});
 
     tsm<ElevatorState> elevator_sm(ElevatorState::DoorClosed, 
         {

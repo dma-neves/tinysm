@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+using namespace tinysm;
+
 class turn_on_switch : public event<bool> {
 public:
     void press() {

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+using namespace tinysm;
+
 using Digit = int;
 
 class tick_dozen : public event<Digit> {

@@ -3,9 +3,87 @@
 
 #include <map>
 #include <tuple>
+#include <vector>
+#include <functional>
 
-#include "event.hpp"
-#include "event_group.hpp"
+namespace tinysm {
+
+template <typename State>
+class tsm;
+
+template <typename State>
+class event_group;
+
+template <typename State>
+class event {
+
+public:
+
+    friend class tsm<State>;
+    friend class event_group<State>;
+
+    void trigger() {
+
+        for(const auto& trigger_ : triggers_) {
+            if(trigger_())
+                break;
+        }
+    }
+
+    State get_state() {
+        return get_state_();
+    }
+
+protected:
+
+    using TriggerFunction = std::function<bool(void)>;
+    using GetStateFunction = std::function<State(void)>;
+
+    void set_trigger(TriggerFunction&& trigger) {
+
+        triggers_.emplace_back(std::move(trigger));
+    }
+
+    void clear_triggers() {
+        triggers_.clear();
+    }
+
+    void set_get_state(GetStateFunction&& get_state) {
+
+        get_state_ = std::move(get_state);
+    }
+
+    std::vector<TriggerFunction> triggers_;
+    GetStateFunction get_state_;
+};
+
+template <typename State>
+class event_group : public event<State> {
+
+public:
+
+    void trigger() {
+        event<State>::trigger();
+    }
+
+    event_group(std::vector<event<State>*>&& events) {
+
+        events_ = std::move(events);
+
+        for(const auto& event_ : events_) {
+
+            event_->set_trigger([this](){
+
+                this->trigger();
+                return true;
+            });
+        }
+    }
+
+private:
+
+    std::vector<event<State>*> events_;
+};
 
 template <typename State>
 class tsm {
@@ -69,16 +147,16 @@ private:
 
     void set_triggers() {
 
-        for(auto& [states, transition] : transitions_) {
+        for(auto& [states, event_] : transitions_) {
 
             const auto& [start_state, end_state] = states;
-            set_triggers(transition, start_state, end_state);
+            set_triggers(event_, start_state, end_state);
         }
     }
 
-    void set_triggers(event<State>& transition, const State& start_state, const State& end_state) {
+    void set_triggers(event<State>& event_, const State& start_state, const State& end_state) {
 
-        transition.set_trigger([this, &start_state, &end_state](){ 
+        event_.set_trigger([this, &start_state, &end_state](){ 
 
             if(this->state_ == start_state) {
                 this->state_ = end_state;
@@ -87,10 +165,12 @@ private:
             return false;
         });
 
-        transition.set_get_state([this]() {
+        event_.set_get_state([this]() {
             return this->state_;
         });
     }
 };
+
+}
 
 #endif

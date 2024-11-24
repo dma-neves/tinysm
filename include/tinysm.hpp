@@ -89,16 +89,34 @@ template <typename State>
 class tsm {
 
     using Transitions = std::map<std::tuple<State,State>, event<State>&>;
+    using EnterExistCallbacks = std::map<State, std::function<void(void)>>;
 
 public:
-    tsm(State&& initial_state, Transitions&& transitions) : state_(std::move(initial_state)), transitions_(std::move(transitions))
+
+    tsm(State&& initial_state, Transitions&& transitions) : tsm(std::move(initial_state), std::move(transitions), {}, {})
+    {
+        callbacks_active = false;
+    }
+
+    tsm(State&& initial_state, Transitions&& transitions, EnterExistCallbacks&& enter_callbacks, EnterExistCallbacks&& exit_callbacks) : 
+        state_(std::move(initial_state)), 
+        transitions_(std::move(transitions)),
+        enter_callbacks_(std::move(enter_callbacks)),
+        exit_callbacks_(std::move(exit_callbacks)),
+        callbacks_active(true)
     {
         set_triggers();
     }
 
-    tsm(State& initial_state, Transitions& transitions) : state_(initial_state), transitions_(transitions)
+    template <typename S, typename T, typename E>
+    tsm(S&& initial_state, T&& transitions, E&& enter_callbacks, E&& exit_callbacks)
+        : state_(std::forward<S>(initial_state)), 
+          transitions_(std::forward<T>(transitions)),
+          enter_callbacks_(std::forward<E>(enter_callbacks)),
+          exit_callbacks_(std::forward<E>(exit_callbacks))
     {
         set_triggers();
+        callbacks_active = enter_callbacks_.size() != 0 && exit_callbacks_.size() != 0;
     }
 
     const State& get_state()
@@ -144,6 +162,9 @@ public:
 private:
     State state_;
     Transitions transitions_;
+    EnterExistCallbacks enter_callbacks_;
+    EnterExistCallbacks exit_callbacks_;
+    bool callbacks_active = false;
 
     void set_triggers() {
 
@@ -159,7 +180,19 @@ private:
         event_.set_trigger([this, &start_state, &end_state](){ 
 
             if(this->state_ == start_state) {
+
                 this->state_ = end_state;
+
+                if(callbacks_active) {
+                    const auto& exit_callback_it = this->exit_callbacks_.find(start_state);
+                    if(exit_callback_it != this->exit_callbacks_.end())
+                        exit_callback_it->second();
+
+                    const auto& enter_callback_it = this->enter_callbacks_.find(end_state);
+                    if(enter_callback_it != this->enter_callbacks_.end())
+                        enter_callback_it->second();
+                }
+
                 return true;
             }
             return false;

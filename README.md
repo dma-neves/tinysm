@@ -1,6 +1,6 @@
 # Tiny State Machine
 
-This is a tiny C++ template library to define state machines declaratively using event-based transitions. Given the lack of a standard C++ state machine library, I created this library as a very simple and light-weight solution do define state machines in my projects. This is a header-only library, meaning that it can easily be copied into an existing project.
+This is a tiny C++ template library to define state machines declaratively using event-based transitions. Given the lack of a standard C++ state machine library, I created this library as a simple and light-weight solution do define state machines in my projects. This is a header-only library, meaning that it can easily be copied into an existing project.
 
 Note: This library was inspired by a similar solution developed by [tobyselway](https://github.com/tobyselway).
 
@@ -18,12 +18,13 @@ examples/elevator
 
 ## Usage
 
-tinysm is composed of four concepts:
+Tinysm conforms to the following model:
 
-- The `State` type, which can be a primitive data type, an enum, etc. See example below.
-- The `event` describes an event that can trigger a transition between states. We can define such events using a class that inherits from `event`. Inside the class we implement any logic we desire, and whenever we want to trigger a transition, we call the `trigger` method from the parent class. If no specific logic is required, we simply instantiate an `event` object, and call `trigger` whenever necessary.
-- The `event_group`. If multiple events should trigger the same state transition, we group them using an `event_group`. The `event_group` constructor receives a vector of `event` addresses.
+- The `State` type can be a primitive data type, an enum, etc. See example below.
+- An `event` can trigger a transition between states. We define such events using a class that inherits from `event`. Inside the class we implement any logic we desire, and call the `trigger` method from the parent class to initiate a state transition. If no specific logic is required, we simply instantiate an `event` object, and call `trigger` whenever necessary.
+- If multiple events should trigger the same state transition, we group them using an `event_group`. The `event_group` constructor receives a vector of `event` addresses.
 - The `tsm` allows us to declaratively define the relation between state transitions and events or event groups. The `tsm` constructor receives a default state, and a map whose keys are tuples `<start_state, end_state>`, and values are events or event groups. If needed, it is also possible to dynamically add and remove transitions.
+- The `tsm` constructor can optionally receive two additional parameters, an `enter_callbacks`and `exit_callbacks`. These allow us to describe callback functions to execute whenever a state is entered or exited. Both these parameters must be maps whose keys are a state, and value a `std::function<void(void)>`. See the [clock example](examples/clock.cpp).
 
 ## Elevator Example
 

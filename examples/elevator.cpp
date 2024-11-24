@@ -57,8 +57,30 @@ private:
     close_door_timer& close_door_timer_;
 };
 
+class elevator_driver {
+
+public:
+    void move_up(event<ElevatorState>& reached_floor) { 
+        /* control elevator motors to move to destination_floor */ 
+        reached_floor.trigger();
+    }
+
+    void move_down(event<ElevatorState>& reached_floor) {
+        /* control elevator motors to move to destination_floor */ 
+        reached_floor.trigger();
+    }
+    
+    void open_door() { /* control elevator door motors to open */ }
+    void close_door() { /* control elevator door motors to close */ }
+
+    void set_destination_floor(int floor) { destination_floor = floor; }
+private:
+    int destination_floor = 0;
+};
 
 int main() {
+
+    elevator_driver ed;
 
     close_door_timer close_door_timer_;
 
@@ -79,17 +101,25 @@ int main() {
     event_group<ElevatorState> go_down_({&select_floor_below_elevator_floor_, &press_up_below_elevator_floor_, &press_down_below_elevator_floor_});
     event_group<ElevatorState> go_up_({&select_floor_above_elevator_floor_, &press_up_above_elevator_floor_, &press_down_above_elevator_floor_});
 
-    tsm<ElevatorState> elevator_sm(ElevatorState::DoorClosed, {
+    tsm<ElevatorState> elevator_sm(ElevatorState::DoorClosed, 
+        {
+            {{ElevatorState::DoorOpen, ElevatorState::DoorClosed}, close_door_timer_},
+            {{ElevatorState::DoorClosed, ElevatorState::DoorOpen}, open_door_},
+            {{ElevatorState::DoorOpen, ElevatorState::DoorOpen}, open_door_},
 
-        {{ElevatorState::DoorOpen, ElevatorState::DoorClosed}, close_door_timer_},
-        {{ElevatorState::DoorClosed, ElevatorState::DoorOpen}, open_door_},
-        {{ElevatorState::DoorOpen, ElevatorState::DoorOpen}, open_door_},
-
-        {{ElevatorState::DoorClosed, ElevatorState::MovingUp}, go_up_},
-        {{ElevatorState::MovingUp, ElevatorState::DoorOpen}, reached_selected_floor_},
-        {{ElevatorState::DoorClosed, ElevatorState::MovingDown}, go_down_},
-        {{ElevatorState::MovingDown, ElevatorState::DoorOpen}, reached_selected_floor_},
-    });
+            {{ElevatorState::DoorClosed, ElevatorState::MovingUp}, go_up_},
+            {{ElevatorState::MovingUp, ElevatorState::DoorOpen}, reached_selected_floor_},
+            {{ElevatorState::DoorClosed, ElevatorState::MovingDown}, go_down_},
+            {{ElevatorState::MovingDown, ElevatorState::DoorOpen}, reached_selected_floor_},
+        },
+        {
+            {ElevatorState::DoorClosed, [&ed](){ ed.close_door();                                                   } },
+            {ElevatorState::DoorOpen,   [&ed](){ ed.open_door();                                                    } },
+            {ElevatorState::MovingUp,   [&ed, &reached_selected_floor_](){ ed.move_up(reached_selected_floor_);     } },
+            {ElevatorState::MovingDown, [&ed, &reached_selected_floor_](){ ed.move_down(reached_selected_floor_);   } }
+        },
+        {}
+    );
 
     print_elevator_state(elevator_sm.get_state()); // DoorClosed
 

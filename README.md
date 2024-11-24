@@ -1,6 +1,6 @@
 # Tiny State Machine
 
-This is a tiny C++ template library to define state machines declaratively using event-based transitions. Given the lack of a standard C++ state machine library, I created this library as a simple and light-weight solution do define state machines in my projects. This is a header-only library, meaning that it can easily be copied into an existing project.
+This is a tiny C++ template library to define state machines declaratively and use event-based transitions. Given the lack of a standard C++ state machine library, I created this library as a very simple and light-weight solution to define state machines in my projects. This is a header-only library, meaning that it can easily be copied into an existing project.
 
 Note: This library was inspired by a similar solution developed by [tobyselway](https://github.com/tobyselway).
 
